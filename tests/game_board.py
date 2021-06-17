@@ -15,4 +15,4 @@ def test_original_board_setup():
 
     terrain_counts = [count_terrain_spaces(board, terrain) for terrain in Terrain]
 
-    assert terrain_counts == [11, 11, 11, 11, 11, 11, 11]
+    assert terrain_counts == [0, 11, 11, 11, 11, 11, 11, 11]
