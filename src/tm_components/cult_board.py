@@ -1,4 +1,4 @@
-from ..mappings import Terrain
+from ..mappings import Terrain, Cults
 
 class CultTrack(object):
 
@@ -18,8 +18,8 @@ class CultBoard(object):
 
     def __init__(self):
         tracks = {
-            "fire": CultTrack(),
-            "water": CultTrack(),
-            "earth": CultTrack(),
-            "air": CultTrack(),
+            Cults.FIRE: CultTrack(),
+            Cults.WATER: CultTrack(),
+            Cults.EARTH: CultTrack(),
+            Cults.AIR: CultTrack(),
         }

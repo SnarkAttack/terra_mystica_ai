@@ -9,3 +9,10 @@ class Terrain(Enum):
     MOUNTAINS = 4
     WASTELAND = 5
     DESERT = 6
+
+class Cults(Enum):
+    NONE = -1
+    FIRE = 0
+    WATER = 1
+    EARTH = 2
+    AIR = 3
