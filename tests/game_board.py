@@ -1,4 +1,4 @@
-from src.tm_components.game_board import OriginalGameBoard
+from src.components.game_board import OriginalGameBoard
 from src.mappings import Terrain
 
 def count_terrain_spaces(board, terrain):
