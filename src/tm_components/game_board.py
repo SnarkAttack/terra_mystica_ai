@@ -5,7 +5,7 @@ class GameBoard(object):
          self._locations = []
          self._components = []
 
-class OriginalGameBoard(object):
+class OriginalGameBoard(GameBoard):
     def __init__(self):
         self._locations = [
             [Terrain.PLAINS, Terrain.MOUNTAINS, Terrain.FOREST, Terrain.LAKES, Terrain.DESERT, Terrain.WASTELAND, Terrain.PLAINS, Terrain.SWAMP, Terrain.WASTELAND, Terrain.FOREST, Terrain.LAKES, Terrain.WASTELAND, Terrain.SWAMP],
