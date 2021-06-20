@@ -1,14 +1,15 @@
 from enum import Enum
 
 class Terrain(Enum):
-    NONE = -1
-    PLAINS = 0
-    SWAMP = 1
-    LAKES = 2
-    FOREST = 3
-    MOUNTAINS = 4
-    WASTELAND = 5
-    DESERT = 6
+    NONE = 0
+    PLAINS = 1
+    SWAMP = 2
+    LAKES = 3
+    FOREST = 4
+    MOUNTAINS = 5
+    WASTELAND = 6
+    DESERT = 7
+    RIVER = 8
 
 class Cults(Enum):
     NONE = -1
