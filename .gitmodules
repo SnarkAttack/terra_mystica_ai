@@ -1,0 +1,3 @@
+[submodule "terra-mystica"]
+	path = terra-mystica
+	url = git@github.com:jsnell/terra-mystica.git
