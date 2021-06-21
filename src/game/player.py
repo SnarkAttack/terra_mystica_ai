@@ -1,6 +1,7 @@
 from .resources import ResourceRequirements, ResourceGroup
 from ..mappings import Factions
 from ..components.faction_board import WitchesFactionBoard, NomadsFactionBoard
+from ..utilities import MAX_TRADING_POSTS, MAX_TEMPLES, MAX_STRONGHOLDS, MAX_SANCTUARIES, MAX_DWELLINGS
 
 class Player(object):
 
@@ -19,15 +20,15 @@ class Player(object):
 
         self._exchange_level = 0
 
-        self._power_1 = 5
-        self._power_2 = 7
-        self._power_3 = 0
+        self._power1 = 5
+        self._power2 = 7
+        self._power3 = 0
 
-        self._available_dwellings = 8
-        self._available_trading_posts = 5
-        self._available_strongholds = 1
-        self._available_temples = 3
-        self._available_sanctuaries = 1
+        self._available_dwellings = MAX_DWELLINGS
+        self._available_trading_posts = MAX_TRADING_POSTS
+        self._available_strongholds = MAX_STRONGHOLDS
+        self._available_temples = MAX_TEMPLES
+        self._available_sanctuaries = MAX_SANCTUARIES
 
         self._game = game
 
@@ -51,6 +52,9 @@ class Player(object):
     def get_priests(self):
         return self._priests
 
+    def get_power(self):
+        return (self._power1, self._power2, self._power3)
+
     def get_terraform_worker_cost(self, terrain_diff_val):
         worker_per_spade = self._get_spade_exchange_cost()
         return ResourceRequirements(workers=worker_per_spade*terrain_diff_val)
@@ -66,11 +70,36 @@ class Player(object):
     def get_build_dwelling_cost(self):
         return self._player_board.get_dwelling_build_cost()
 
+    def add_power(self, power_to_add):
+        power_1_to_move = min(self._power1, power_to_add)
+        self._power1 -= power_1_to_move
+        self._power2 += power_1_to_move
+        power_to_add -= power_1_to_move
+        power_2_to_add = min(self._power2, power_to_add)
+        self._power2 -= power_2_to_add
+        self._power3 += power_2_to_add
+
+    def spend_power(self, power_to_lose):
+        self._power3 -= power_to_lose
+        self._power1 += power_to_lose
+
+    def gain_resources(self, resource_income):
+        self._coins += resource_income.get_coins()
+        self._workers += resource_income.get_workers()
+        self._priests += resource_income.get_priests()
+        self._vp += resource_income.get_vp()
+        self.add_power(resource_income.get_power())
+
     def spend_resources(self, resource_cost):
         self._coins -= resource_cost.get_coins()
         self._workers -= resource_cost.get_workers()
         self._priests -= resource_cost.get_priests()
-        self._power_3 -= resource_cost.get_power()
+        self._power3 -= resource_cost.get_power()
+        self._power1 += resource_cost.get_power()
+        self._vp -= resource_cost.get_vp()
+
+    def take_income(self):
+        pass
 
     def select_move(self):
         raise NotImplementedError()
