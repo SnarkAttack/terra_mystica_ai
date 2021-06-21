@@ -1,9 +1,22 @@
 from ..mappings import Terrain
 
 class GameBoard(object):
-     def __init__(self):
+
+    def __init__(self):
          self._locations = []
          self._components = []
+
+    def get_terrain(self, code):
+        row_val, col_val = ord(code[:1].upper())-ord('A'), int(code[1:])-1
+        if row_val >= len(self._locations):
+            return Terrain.NONE
+        print(f"Row: {row_val}, col: {col_val}")
+        row = self._locations[row_val]
+        cols = [terrain for terrain in row if Terrain.RIVER]
+        if col_val >= len(row):
+            return Terrain.NONE
+        return cols[col_val]
+
 
 class OriginalGameBoard(GameBoard):
     def __init__(self):
