@@ -1,7 +1,7 @@
 from ..mappings import BoardType
 from ..components.game_board import OriginalGameBoard
 
-def TerraMysticaGame(object):
+class TerraMysticaGame(object):
 
     def __init__(self, board_type):
         if board_type == BoardType.ORIGINAL:
@@ -18,3 +18,10 @@ def TerraMysticaGame(object):
             self._players.append(player)
         else:
             raise ValueError("Player already exists")
+
+    def get_game_board(self):
+        return self._board
+
+    def perform_move(self, move):
+        action = move.get_action()
+        action.take_action(self, move.get_player())

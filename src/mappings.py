@@ -1,6 +1,6 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
-class Terrain(Enum):
+class Terrain(IntEnum):
     NONE = 0
     PLAINS = 1
     SWAMP = 2
@@ -12,11 +12,19 @@ class Terrain(Enum):
     RIVER = 8
 
 class Cults(Enum):
-    NONE = -1
-    FIRE = 0
-    WATER = 1
-    EARTH = 2
-    AIR = 3
+    NONE = 0
+    FIRE = 1
+    WATER = 2
+    EARTH = 3
+    AIR = 4
+
+class Buildings(Enum):
+    NONE = 0
+    DWELLING = 1
+    TRADING_POST = 2
+    STRONGHOLD = 3
+    TEMPLE = 4
+    SANCTUARY = 5
 
 class Factions(Enum):
     ALCHEMISTS = 0
