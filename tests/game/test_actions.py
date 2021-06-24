@@ -39,3 +39,14 @@ def test_terraform_build():
     assert game.get_game_board().get_terrain("A4") == Terrain.SWAMP
     assert player.get_workers() == 1
     assert player.get_coins() == 13
+
+def test_place_dwelling():
+
+    game = TerraMysticaGame(BoardType.ORIGINAL)
+    player = Player(game, Factions.WITCHES)
+    action = PlaceDwellingAction("A3")
+    move = Move(player, action)
+    game.perform_move(move)
+    assert game.get_game_board().get_structure("A3").get_faction() == Factions.WITCHES
+    assert game.get_game_board().get_structure("A3").get_type() == Structures.DWELLING
+    assert game.get_game_board().get_structure("A2").get_type() == Structures.NONE

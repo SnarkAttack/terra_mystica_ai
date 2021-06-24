@@ -13,7 +13,7 @@ def test_original_board_setup():
     row_lens = [len(row) for row in board._locations]
     assert row_lens == [13, 12, 13, 12, 13, 12, 13, 12, 13]
 
-    row_lens = [len(row) for row in board._components]
+    row_lens = [len(row) for row in board._structures]
     assert row_lens == [13, 12, 13, 12, 13, 12, 13, 12, 13]
 
     terrain_counts = [count_terrain_spaces(board, terrain) for terrain in Terrain]

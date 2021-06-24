@@ -18,7 +18,7 @@ class Cults(Enum):
     EARTH = 3
     AIR = 4
 
-class Buildings(Enum):
+class Structures(Enum):
     NONE = 0
     DWELLING = 1
     TRADING_POST = 2
@@ -27,20 +27,36 @@ class Buildings(Enum):
     SANCTUARY = 5
 
 class Factions(Enum):
-    ALCHEMISTS = 0
-    AUREN = 1
-    CHAOS_MAGICIANS = 2
-    CULTISTS = 3
-    DARKLINGS = 4
-    DWARVES = 5
-    ENGINEERS = 6
-    FAKIR = 7
-    GIANTS = 8
-    HALFLINGS = 9
-    MERMAIDS = 10
-    NOMADS = 11
-    SWARMLINGS = 12
-    WITCHES = 13
+    NONE = 0
+    ALCHEMISTS = 1
+    AUREN = 2
+    CHAOS_MAGICIANS = 3
+    CULTISTS = 4
+    DARKLINGS = 5
+    DWARVES = 6
+    ENGINEERS = 7
+    FAKIR = 8
+    GIANTS = 9
+    HALFLINGS = 10
+    MERMAIDS = 11
+    NOMADS = 12
+    SWARMLINGS = 13
+    WITCHES = 14
 
 class BoardType(Enum):
-    ORIGINAL = 0
+    NONE = 0
+    ORIGINAL = 1
+
+class GamePhase(Enum):
+    UNKNOWN = 0
+    SETUP = 1
+    INCOME = 2
+    ACTION = 3
+    CULT_BONUSES = 4
+    CLEANUP = 5
+
+class MoveType(Enum):
+    NONE = 0
+    ACTION = 1
+    SIPHON_POWER = 2
+    PLACE_DWELLING = 3

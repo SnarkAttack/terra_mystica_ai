@@ -1,5 +1,6 @@
 from ..utilities import get_shovel_cost
 from .exceptions import InvalidActionException
+from ..mappings import Structures
 
 class Action(object):
 
@@ -51,14 +52,10 @@ class TerraformBuildAction(Action):
 
         game_board = game.get_game_board()
 
-        if game_board.get_terrain(self._location) == self._terraform_to:
-            raise InvalidActionException("Cannot terraform to current terrain type")
-
         terrain_diff_cost = get_shovel_cost(game_board.get_terrain(self._location), self._terraform_to)
         terraforming_cost = player.get_terraform_worker_cost(terrain_diff_cost)
         build_cost = player.get_build_dwelling_cost()
         action_cost = terraforming_cost + build_cost
-        print(action_cost)
 
         if player.get_workers() < action_cost.get_workers():
             raise InvalidActionException("Not enough workers to terraform")
@@ -67,3 +64,25 @@ class TerraformBuildAction(Action):
         #game_board.modify_building()
 
         player.spend_resources(action_cost)
+
+class PlaceDwellingAction(Action):
+
+    def __init__(self, location):
+        super().__init__()
+        self._location = location
+
+    def get_location(self):
+        return self._location
+
+    def _raw_take_action(self, game, player):
+
+        game_board = game.get_game_board()
+
+        if game_board.get_structure(self._location).get_type() != Structures.NONE:
+            raise InvalidActionException("Building already located in this place")
+
+        if game_board.get_terrain(self._location) != player.get_home_terrain():
+            raise InvalidActionException("Terrain location does not match faction")
+
+        game_board.place_dwelling(self._location, player.get_faction())
+        player._available_dwellings -= 1

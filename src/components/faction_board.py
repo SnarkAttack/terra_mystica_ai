@@ -1,10 +1,12 @@
-from ..mappings import Terrain, Cults
+from ..mappings import Terrain, Cults, Factions
 from ..game.resources import ResourceGroup, ResourceRequirements
 from ..utilities import MAX_DWELLINGS, MAX_SANCTUARIES, MAX_STRONGHOLDS, MAX_TEMPLES, MAX_TRADING_POSTS
 
 class FactionBoard(object):
 
     def __init__(self):
+        self._faction = Factions.NONE
+        self._home_terrain = Terrain.NONE
         self._starting_coins = 0
         self._starting_workers = 0
         self._starting_cult_1 = Cults.NONE
@@ -73,6 +75,12 @@ class FactionBoard(object):
             ResourceGroup(priests=1)
         ]
 
+    def get_faction(self):
+        return self._faction
+
+    def get_home_terrain(self):
+        return self._home_terrain
+
     def get_starting_workers(self):
         return self._starting_workers
 
@@ -102,7 +110,8 @@ class WitchesFactionBoard(FactionBoard):
 
     def __init__(self):
         super().__init__()
-        self.home_terrain = Terrain.FOREST
+        self._faction = Factions.WITCHES
+        self._home_terrain = Terrain.FOREST
         self._starting_workers = 3
         self._starting_coins = 15
         self._starting_cult_1 = Cults.AIR
@@ -174,7 +183,8 @@ class WitchesFactionBoard(FactionBoard):
 class NomadsFactionBoard(FactionBoard):
     def __init__(self):
         super().__init__()
-        self.home_terrain = Terrain.FOREST
+        self._faction = Factions.NOMADS
+        self._home_terrain = Terrain.DESERT
         self._starting_workers = 2
         self._starting_coins = 15
         self._starting_cult_1 = Cults.EARTH

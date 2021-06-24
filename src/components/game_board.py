@@ -1,13 +1,14 @@
 import tensorflow as tf
 
 from ..game.exceptions import InvalidActionException
-from ..mappings import Terrain, Buildings
+from ..mappings import Terrain, Structures
+from ..components.structures import Structure, Dwelling, TradingPost, Stronghold, Temple, Sanctuary
 
 class GameBoard(object):
 
     def __init__(self):
          self._locations = []
-         self._components = []
+         self._structures = []
 
     def get_valid_location_codes(self):
         all_valid_locations = []
@@ -18,16 +19,54 @@ class GameBoard(object):
             all_valid_locations += valid_locations
         return all_valid_locations
 
+    def get_valid_location_codes_terrain_type(self, terrain_type):
+        all_valid_locations = []
+        for i, row in enumerate(self._locations):
+            row_letter = chr(i+ord('A'))
+            trim_row = [terrain for terrain in row if terrain != Terrain.RIVER]
+            match_row = [i for i, terrain in enumerate(trim_row) if terrain == terrain_type]
+            valid_locations = [f"{row_letter}{j+1}" for j in match_row]
+            all_valid_locations += valid_locations
+        return all_valid_locations
+
     def _get_location_row_col(self, location_code):
         return ord(location_code[:1].upper())-ord('A'), int(location_code[1:])-1
 
-    def get_terrain(self, code):
-        row_val, col_val = self._get_location_row_col(code)
+    def place_dwelling(self, location_code, faction):
+        row_val, col_val = self._get_location_row_col(location_code)
+        if row_val >= len(self._structures):
+            return None
+        row = self._structures[row_val]
+        cols = [terrain for terrain in row if terrain != Terrain.RIVER]
+        if col_val >= len(cols):
+            return None
+        row[col_val] = Dwelling(location_code, faction)
+
+    def get_structure(self, location_code):
+        row_val, col_val = self._get_location_row_col(location_code)
+        if row_val >= len(self._structures):
+            return Terrain.NONE
+        row = self._structures[row_val]
+        cols = [terrain for terrain in row if terrain != Terrain.RIVER]
+        if col_val >= len(cols):
+            return Terrain.NONE
+        return cols[col_val]
+
+    def get_all_player_structures(self, player):
+        all_structures = []
+        for row in self._structures:
+            for struct in row:
+                if struct.get_faction() == player.get_faction():
+                    all_structures.append(struct)
+        return all_structures
+
+    def get_terrain(self, location_code):
+        row_val, col_val = self._get_location_row_col(location_code)
         if row_val >= len(self._locations):
             return Terrain.NONE
         row = self._locations[row_val]
-        cols = [terrain for terrain in row if Terrain.RIVER]
-        if col_val >= len(row):
+        cols = [terrain for terrain in row if terrain != Terrain.RIVER]
+        if col_val >= len(cols):
             return Terrain.NONE
         return cols[col_val]
 
@@ -36,8 +75,8 @@ class GameBoard(object):
         if row_val >= len(self._locations):
             raise InvalidActionException
         row = self._locations[row_val]
-        cols = [terrain for terrain in row if Terrain.RIVER]
-        if col_val >= len(row):
+        cols = [terrain for terrain in row if terrain != Terrain.RIVER]
+        if col_val >= len(cols):
             raise InvalidActionException
         row[col_val] = terraform_to
         return
@@ -95,10 +134,11 @@ class GameBoard(object):
                 extended_map = self._extend_terrain_map(terrain_only_map)
                 tensor_terrain_map = self._convert_terrain_map_to_tensor(extended_map)
                 terrain_maps.append(tensor_terrain_map)
-        return tf.stack(terrain_maps, axis=0)
+        return tf.stack(terrain_maps, axis=2)
 
     def generate_board_state(self):
-        return self._generate_terrain_board_state()
+        #print(self._generate_terrain_board_state())
+        return tf.reshape(self._generate_terrain_board_state(), (1, 9, 25, 8))
 
 
 class OriginalGameBoard(GameBoard):
@@ -115,14 +155,14 @@ class OriginalGameBoard(GameBoard):
             [Terrain.WASTELAND, Terrain.SWAMP, Terrain.MOUNTAINS, Terrain.LAKES, Terrain.WASTELAND, Terrain.FOREST, Terrain.DESERT, Terrain.PLAINS, Terrain.MOUNTAINS, Terrain.RIVER, Terrain.LAKES, Terrain.FOREST, Terrain.WASTELAND]
         ]
 
-        self._components = [
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
-            [Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE, Buildings.NONE],
+        self._structures = [
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
+            [Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure(), Structure()],
         ]
