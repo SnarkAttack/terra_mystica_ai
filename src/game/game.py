@@ -13,6 +13,9 @@ class PendingMove(object):
     def get_move_type(self):
         return self._move_type
 
+def get_default_game(board_type):
+    return TerraMysticaGame(board_type)
+
 class TerraMysticaGame(object):
 
     def __init__(self, board_type):

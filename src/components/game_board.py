@@ -140,6 +140,14 @@ class GameBoard(object):
         #print(self._generate_terrain_board_state())
         return tf.reshape(self._generate_terrain_board_state(), (1, 9, 25, 8))
 
+    def get_board_state_str(self):
+        board_state = self.generate_board_state()
+        flat_tensor = tf.reshape(board_state, [-1])
+        bs_str = tf.strings.as_string(flat_tensor).numpy().tolist()
+        return b','.join(bs_str)
+
+
+
 
 class OriginalGameBoard(GameBoard):
     def __init__(self):

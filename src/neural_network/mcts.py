@@ -1,5 +1,6 @@
 import numpy as np
 from copy import deepcopy, copy
+import hashlib
 
 from numpy.core.numeric import indices
 from ..game.move import Move
@@ -8,7 +9,7 @@ from ..junk import all_locations
 C = 5
 
 def id_hash(game):
-    return hash(GameState(game))
+    return GameState(game).get_id()
 
 class GameState(object):
 
@@ -17,6 +18,14 @@ class GameState(object):
         self._game_board_state = game.get_game_board().generate_board_state()
         self._player_states = [player.generate_player_state() for player in game.get_players()]
         self._cult_board_state = game.get_cult_board()
+
+        gb_string = game.get_game_board().get_board_state_str()
+        res = hashlib.md5(gb_string)
+
+        self._id = res.digest()
+
+    def get_id(self):
+        return self._id
 
     def get_game_board_state(self):
         return self._game_board_state
@@ -160,16 +169,11 @@ class MCTSNode(object):
 
 class MCTS(object):
 
-    def __init__(self, network, game, num_steps=100):
+    def __init__(self, network, num_steps=100):
         self._network = network
-        self._root = MCTSNode(game, None)
         self._num_steps = num_steps
         self._ids = {
-            self._root.get_id(): self._root
         }
-
-    def create_root(self, game):
-        self._root = MCTSNode(game, None)
 
     def _linear_tau_step(self, current_step):
         return current_step/(self._num_steps*2)
@@ -201,19 +205,20 @@ class MCTS(object):
 
         if curr_root.get_num_children() == 0:
             curr_root.expand(self)
-            print(curr_root.get_num_children())
 
         for i in range(self._num_steps):
             tau = self._flip_tau_step(i)
             self.step(curr_root, our_player, tau)
 
-        print([child.get_visits() for child in curr_root.get_children()])
-        for i, child in enumerate(self._root._children):
-            print(f"{i}: {[gchild.get_visits() for gchild in child.get_children()]}")
-
         best_action = curr_root.get_highest_value_child().get_action()
         print(best_action.get_location())
         return best_action
+
+    def get_state_tree(self, game):
+        node = self._ids.get(id_hash(game))
+        print([child.get_visits() for child in node.get_children()])
+        for i, child in enumerate(self._root._children):
+            print(f"{i}: {[gchild.get_visits() for gchild in child.get_children()]}")
 
     def step(self, start_node, our_player, tau):
         node = start_node
