@@ -14,8 +14,7 @@ class GameBoard(object):
         all_valid_locations = []
         for i, row in enumerate(self._locations):
             row_letter = chr(i+ord('A'))
-            trim_row = [terrain for terrain in row if terrain != Terrain.RIVER]
-            valid_locations = [f"{row_letter}{j+1}" for j in range(len(trim_row))]
+            valid_locations = [f"{row_letter}{j+1}" for j in range(len(row))]
             all_valid_locations += valid_locations
         return all_valid_locations
 
@@ -23,8 +22,7 @@ class GameBoard(object):
         all_valid_locations = []
         for i, row in enumerate(self._locations):
             row_letter = chr(i+ord('A'))
-            trim_row = [terrain for terrain in row if terrain != Terrain.RIVER]
-            match_row = [i for i, terrain in enumerate(trim_row) if terrain == terrain_type]
+            match_row = [i for i, terrain in enumerate(row) if terrain == terrain_type]
             valid_locations = [f"{row_letter}{j+1}" for j in match_row]
             all_valid_locations += valid_locations
         return all_valid_locations
