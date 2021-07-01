@@ -17,4 +17,4 @@ def test_get_home_terrain_type_codes():
    game = TerraMysticaGame(BoardType.ORIGINAL)
    player = Player(game, Factions.WITCHES)
 
-   assert player.get_home_terrain_tile_codes() == ["A3", "A10", "C3", "C4", "D1", "E9", "F2", "F4", "G3", "I6", "I11"]
+   assert player.get_home_terrain_tile_codes() == ["A3", "A10", "C7", "C9", "D1", "E11", "F2", "F6", "G8", "I6", "I12"]

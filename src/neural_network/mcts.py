@@ -120,14 +120,20 @@ class MCTSNode(object):
 
     def generate_all_valid_next_states(self, player, valid_next_actions, probs, tree):
         softmax_probs = self._cheaty_thing(valid_next_actions, probs)
+        print(f"Game: {id_hash(self._game)}")
         for action, prob in zip(valid_next_actions, softmax_probs):
             game_copy = deepcopy(self._game)
             move = Move(player, action)
             game_copy.perform_move(move)
-            if tree.get_ids().get(GameState(game_copy)) is None:
+            print(f"Game copy after move: {id_hash(game_copy)}")
+            if tree.get_ids().get(GameState(game_copy).get_id()) is None:
                 child_node = MCTSNode(game=game_copy, player=player, parent=self, probability=prob, action=action)
+                print("Making new node")
+                print(child_node._parent)
             else:
                 child_node = tree.get_ids()[id_hash(game_copy)]
+                print("Node already exists")
+                print(child_node._parent)
             self._children.append(child_node)
             self._child_probs.append(prob)
             tree.add_node_to_tree(child_node)
@@ -141,6 +147,7 @@ class MCTSNode(object):
     def expand(self, tree):
         player, valid_next_actions = self.get_game().get_all_valid_next_actions()
         probs = tree._network.predict_actions(self.get_game_state())
+        print(len(tree._ids))
         self.generate_all_valid_next_states(player, valid_next_actions, probs, tree)
 
     def get_child_node_prob(self, child_node):
@@ -200,10 +207,12 @@ class MCTS(object):
                 game=game,
                 player=our_player)
             self.add_node_to_tree(curr_root)
+            print("Making new root for this action")
         else:
             curr_root = self._ids[id_hash(game)]
 
         if curr_root.get_num_children() == 0:
+            print("Expanding current root")
             curr_root.expand(self)
 
         for i in range(self._num_steps):

@@ -18,7 +18,7 @@ class Cults(Enum):
     EARTH = 3
     AIR = 4
 
-class Structures(Enum):
+class Structures(IntEnum):
     NONE = 0
     DWELLING = 1
     TRADING_POST = 2
@@ -26,7 +26,7 @@ class Structures(Enum):
     TEMPLE = 4
     SANCTUARY = 5
 
-class Factions(Enum):
+class Factions(IntEnum):
     NONE = 0
     ALCHEMISTS = 1
     AUREN = 2

@@ -14,4 +14,4 @@ class Agent(object):
         return best_move
 
     def get_state_tree(self, game):
-        return self._mtcs.get_state_tree(game)
+        return self._mcts.get_state_tree(game)

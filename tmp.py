@@ -10,18 +10,20 @@ import tensorflow as tf
 agent1 = Agent()
 agent2 = Agent()
 
-for i in range(5):
+for i in range(1):
     game = TerraMysticaGame(BoardType.ORIGINAL)
     game2 = TerraMysticaGame(BoardType.ORIGINAL)
     player1 = Player(game, Factions.WITCHES, agent=agent1)
     player2 = Player(game, Factions.NOMADS, agent=agent2)
     game.add_player(player1)
     game.add_player(player2)
-    game.play_game()
+    #game.test_play_game()
 
-game = TerraMysticaGame(BoardType.ORIGINAL)
+    print(id_hash(game))
 
-agent1.get_state_tree(game)
+# game = TerraMysticaGame(BoardType.ORIGINAL)
+
+# agent1.get_state_tree(game)
 
 # old_game = TerraMysticaGame(BoardType.ORIGINAL)
 # game_state = old_game.get_game_board().generate_board_state()

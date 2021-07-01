@@ -30,7 +30,7 @@ def game_board_net(height, width, depth):
 
     num_res_blocks=10
 
-    inputs = Input((height, width, depth))
+    inputs = Input((depth, height, width))
 
     x = Conv2D(kernel_size=(3, 5), strides=(1, 1), filters=256, padding="same")(inputs)
     x = relu_bn(x)
@@ -49,7 +49,7 @@ class TerraMysticaAINetwork():
 
         height = 9
         width = 25
-        depth = 8
+        depth = 78
 
         # cult_board_input = None
         # player_input = None
@@ -59,7 +59,7 @@ class TerraMysticaAINetwork():
         x = Dense(128)(game_board_cnn.output)
         x = Dense(64)(x)
         x = Dense(32)(x)
-        x = Dense(77, activation='softmax', name='action_output')(x)
+        x = Dense(113, activation='softmax', name='action_output')(x)
 
         y = Dense(128)(game_board_cnn.output)
         y = Dense(64)(y)

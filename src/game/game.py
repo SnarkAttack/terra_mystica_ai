@@ -60,6 +60,12 @@ class TerraMysticaGame(object):
         while not self._is_done:
             self.perform_next_move()
 
+    def test_play_game(self):
+        self._pending_moves.append(PendingMove(self._players[0], MoveType.PLACE_DWELLING))
+
+        while not self._is_done:
+            self.perform_next_move()
+
     def perform_next_move(self):
         self._current_move = self._pending_moves.pop(0)
         # Set conditional flags signalling change to next game stage, etc:
