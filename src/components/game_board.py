@@ -37,8 +37,7 @@ class GameBoard(object):
         if row_val >= len(self._structures):
             return None
         row = self._structures[row_val]
-        cols = [terrain for terrain in row if terrain != Terrain.RIVER]
-        if col_val >= len(cols):
+        if col_val >= len(row):
             return None
         row[col_val] = Dwelling(location_code, faction)
 
@@ -47,10 +46,9 @@ class GameBoard(object):
         if row_val >= len(self._structures):
             return Terrain.NONE
         row = self._structures[row_val]
-        cols = [terrain for terrain in row if terrain != Terrain.RIVER]
-        if col_val >= len(cols):
+        if col_val >= len(row):
             return Terrain.NONE
-        return cols[col_val]
+        return row[col_val]
 
     def get_all_player_structures(self, player):
         all_structures = []
@@ -65,10 +63,9 @@ class GameBoard(object):
         if row_val >= len(self._locations):
             return Terrain.NONE
         row = self._locations[row_val]
-        cols = [terrain for terrain in row if terrain != Terrain.RIVER]
-        if col_val >= len(cols):
+        if col_val >= len(row):
             return Terrain.NONE
-        return cols[col_val]
+        return row[col_val]
 
     def terraform_location(self, location_code, terraform_to):
         row_val, col_val = self._get_location_row_col(location_code)
