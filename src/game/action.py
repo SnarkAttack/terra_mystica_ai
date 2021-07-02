@@ -1,4 +1,4 @@
-from ..utilities import get_shovel_cost
+from ..utilities.functions import get_shovel_cost
 from .exceptions import InvalidActionException
 from ..mappings import Structures
 
