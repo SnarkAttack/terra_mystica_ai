@@ -45,6 +45,10 @@ class MCTSNode(object):
         self._player = player
         self._id = id_hash(game)
 
+        # Don't want to propogate value of game_ending node we have already found,
+        # so this is flipped if node contains a finished game and we have processed it
+        self._is_found_leaf_node = False
+
     def _ucb(self):
         # Visits + 1e-5 is to make sure we aren't dividing by 0, while not actually effecting the
         # final result significantly
@@ -52,7 +56,13 @@ class MCTSNode(object):
 
     # tau = 0 is pure exploration, tau = 1 is pure exploitation
     def _uci(self, tau):
-        return (1-tau)*self._value + tau*(C * self._probability*(np.sqrt(self._parent.get_visits())/(1+self._visits)))
+        # print(self._parent.get_visits())
+        # print(self._visits)
+        # print(self._parent.get_visits()/(self._visits+1e-5))
+        # print(self._probability)
+        # print(tau)
+        # print()
+        return tau*self._value + (1-tau)*(C * self._probability*(np.sqrt(self._parent.get_visits())/(self._visits+1e-5)))
 
     def get_id(self):
         return self._id
@@ -89,6 +99,12 @@ class MCTSNode(object):
     def set_value(self, value):
         self._value = value
 
+    def is_found_leaf_node(self):
+        return self._is_found_leaf_node
+
+    def set_is_found_leaf_node(self):
+        self._is_found_leaf_node = True
+
     def increment_visits(self):
         self._visits += 1
 
@@ -100,6 +116,8 @@ class MCTSNode(object):
 
     def select_next_node(self, tau):
         #return max(self._children, key=lambda x: x._ucb())
+        # print([x._uci(tau) for x in self._children])
+        # print(max(self._children, key=lambda x: x._uci(tau)).get_action().get_location())
         return max(self._children, key=lambda x: x._uci(tau))
 
     def backprop_value(self, v):
@@ -120,20 +138,17 @@ class MCTSNode(object):
 
     def generate_all_valid_next_states(self, player, valid_next_actions, probs, tree):
         softmax_probs = self._cheaty_thing(valid_next_actions, probs)
-        print(f"Game: {id_hash(self._game)}")
+        #print(softmax_probs)
         for action, prob in zip(valid_next_actions, softmax_probs):
             game_copy = deepcopy(self._game)
             move = Move(player, action)
             game_copy.perform_move(move)
-            print(f"Game copy after move: {id_hash(game_copy)}")
             if tree.get_ids().get(GameState(game_copy).get_id()) is None:
                 child_node = MCTSNode(game=game_copy, player=player, parent=self, probability=prob, action=action)
-                print("Making new node")
-                print(child_node._parent)
+                #print("Making new node")
             else:
                 child_node = tree.get_ids()[id_hash(game_copy)]
-                print("Node already exists")
-                print(child_node._parent)
+                #print("Node already exists")
             self._children.append(child_node)
             self._child_probs.append(prob)
             tree.add_node_to_tree(child_node)
@@ -142,12 +157,11 @@ class MCTSNode(object):
         return self._game.is_done()
 
     def get_highest_value_child(self):
-        return max([child for child in self._children], key=lambda x: x._value)
+        return max(self._children, key=lambda x: x._value)
 
     def expand(self, tree):
         player, valid_next_actions = self.get_game().get_all_valid_next_actions()
         probs = tree._network.predict_actions(self.get_game_state())
-        print(len(tree._ids))
         self.generate_all_valid_next_states(player, valid_next_actions, probs, tree)
 
     def get_child_node_prob(self, child_node):
@@ -158,19 +172,20 @@ class MCTSNode(object):
         return 0
 
     def determine_value(self, network):
-        if self.is_game_done():
+        is_done = self.is_game_done()
+        if is_done:
             self._game.score_game()
             high_score = self._game.get_high_score()
             player_score = self._game.get_player_by_faction(self._player.get_faction()).get_vps()
             if player_score == high_score:
-                #value = high_score
-                value = 1
+                value = high_score
+                #value = 1
             else:
-                #value = player_score - high_score
-                value = -1
+                value = player_score - high_score
+                #value = -1
         else:
             value = network.predict_value(self.get_game_state())
-        return value
+        return value, is_done
 
 
 
@@ -191,6 +206,9 @@ class MCTS(object):
         else:
             return 1
 
+    def _mid_tau_step(self, current_step):
+        return 0.5
+
     def add_node_to_tree(self, node):
         self._ids[node.get_id()] = node
 
@@ -207,25 +225,28 @@ class MCTS(object):
                 game=game,
                 player=our_player)
             self.add_node_to_tree(curr_root)
-            print("Making new root for this action")
+            #print("Making new root for this action")
         else:
             curr_root = self._ids[id_hash(game)]
 
         if curr_root.get_num_children() == 0:
-            print("Expanding current root")
+            #print("Expanding current root")
             curr_root.expand(self)
 
         for i in range(self._num_steps):
-            tau = self._flip_tau_step(i)
+            tau = self._mid_tau_step(i)
             self.step(curr_root, our_player, tau)
 
-        best_action = curr_root.get_highest_value_child().get_action()
-        print(best_action.get_location())
+        best_child = curr_root.get_highest_value_child()
+        best_action = best_child.get_action()
+        #print(f"Children values: {[child.get_value() for child in curr_root._children]}")
+        #print(f"Best action location: {best_action.get_location()}")
+        #print(f"Best action value: {best_child.get_value()}")
         return best_action
 
     def get_state_tree(self, game):
         node = self._ids.get(id_hash(game))
-        print([child.get_visits() for child in node.get_children()])
+        #print([child.get_visits() for child in node.get_children()])
         for i, child in enumerate(self._root._children):
             print(f"{i}: {[gchild.get_visits() for gchild in child.get_children()]}")
 
@@ -234,7 +255,7 @@ class MCTS(object):
         while not node.is_leaf():
             node = node.select_next_node(tau)
 
-        value = node.determine_value(self._network)
+        value, is_done = node.determine_value(self._network)
         # If the player this MCTS belongs to takes the action, add the
         # raw output, if another player takes the action, add the negative
         if our_player.get_faction() == node.get_player().get_faction():
@@ -242,8 +263,15 @@ class MCTS(object):
         else:
             v = -1*value
 
-        if node.get_num_children() == 0:
-            node.expand(self)
+        # If game is done save off memory, else check if node needs expanding
+        if is_done:
+            if node.is_found_leaf_node():
+                v = 0
+            else:
+                node.set_is_found_leaf_node()
+        else:
+            if node.get_num_children() == 0:
+                node.expand(self)
 
         while node is not None:
             node.increment_visits()
