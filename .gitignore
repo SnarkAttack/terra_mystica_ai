@@ -2,3 +2,5 @@ env/
 models/*
 *.pyc
 terra-mystica/
+.DS_Store
+logs/*
