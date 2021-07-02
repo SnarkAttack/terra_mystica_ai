@@ -17,9 +17,7 @@ for i in range(1):
     player2 = Player(game, Factions.NOMADS, agent=agent2)
     game.add_player(player1)
     game.add_player(player2)
-    #game.test_play_game()
-
-    print(id_hash(game))
+    game.play_game()
 
 # game = TerraMysticaGame(BoardType.ORIGINAL)
 
