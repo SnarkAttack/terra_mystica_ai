@@ -18,6 +18,8 @@ class Action(object):
     def _raw_take_action(self, game, player):
         raise NotImplementedError()
 
+    def get_text_str(self):
+        return ""
 
 class TerraformNoBuildAction(Action):
 
@@ -42,6 +44,9 @@ class TerraformNoBuildAction(Action):
 
         player.spend_resources(action_cost)
 
+    def get_text_str(self):
+        return f"TerraformNoBuildAction at {self._location} to {self._terraform_to}"
+
 class TerraformBuildAction(Action):
 
     def __init__(self, location, terraform_to):
@@ -65,6 +70,9 @@ class TerraformBuildAction(Action):
 
         player.spend_resources(action_cost)
 
+    def get_text_str(self):
+        return f"TerraformBuildAction at {self._location} to {self._terraform_to}"
+
 class PlaceDwellingAction(Action):
 
     def __init__(self, location):
@@ -86,3 +94,6 @@ class PlaceDwellingAction(Action):
 
         game_board.place_dwelling(self._location, player.get_faction())
         player._available_dwellings -= 1
+
+    def get_text_str(self):
+        return f"PlaceDwelling at location {self._location}"

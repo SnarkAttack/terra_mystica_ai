@@ -1,5 +1,6 @@
 from ..mappings import BoardType, GamePhase, MoveType
 from ..components.game_board import OriginalGameBoard
+from ..utilities.loggers import game_logger
 
 class PendingMove(object):
 
@@ -52,6 +53,10 @@ class TerraMysticaGame(object):
         return self._players
 
     def play_game(self):
+
+        game_logger.info("Starting game")
+        game_logger.info(f"Factions: {', '.join([str(int(player.get_faction())) for player in self._players])}")
+
         for player in self._players:
             self._pending_moves.append(PendingMove(player, MoveType.PLACE_DWELLING))
         for player in self._players[::-1]:
@@ -60,11 +65,14 @@ class TerraMysticaGame(object):
         while not self._is_done:
             self.perform_next_move()
 
-    def test_play_game(self):
-        self._pending_moves.append(PendingMove(self._players[0], MoveType.PLACE_DWELLING))
+        self.score_game()
 
-        while not self._is_done:
-            self.perform_next_move()
+        players_by_score = sorted(self._players, key=lambda x: x._vps, reverse=True)
+
+        game_logger.info(f"Final scores:\n")
+        for player in players_by_score:
+            game_logger.info(f"\t{str(int(player.get_faction()))}: {player.get_vps()}")
+        game_logger.info(f"{str(int(players_by_score[0].get_faction()))} wins")
 
     def perform_next_move(self):
         self._current_move = self._pending_moves.pop(0)
@@ -72,6 +80,8 @@ class TerraMysticaGame(object):
         if len(self._pending_moves) == 0:
             self._is_done = True
         selected_move = self._current_move.get_player().select_move()
+        game_logger.info(f"Faction {selected_move.get_player().get_faction()} "
+            f"selects action {selected_move.get_action().get_text_str()}")
         self.perform_move(selected_move)
         self._current_move = None
 

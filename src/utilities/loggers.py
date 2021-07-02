@@ -15,3 +15,11 @@ timer_logger.addHandler(timer_fh)
 def log_timing_info(msg):
     if LOG_TIMING:
         timer_logger.debug(msg)
+
+game_logger = logging.getLogger('game_log')
+game_logger.setLevel(logging.INFO)
+
+game_fh = logging.FileHandler('logs/games.log')
+
+game_fh.setFormatter(formatter)
+game_logger.addHandler(game_fh)

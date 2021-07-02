@@ -140,7 +140,6 @@ class Player(object):
 
     def select_move(self):
         next_action = self._agent.determine_next_action(self._game, self)
-        #self._game.update_player_trees(best_child)
         move = Move(self, next_action)
         return move
 
