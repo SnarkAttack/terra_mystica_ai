@@ -5,6 +5,8 @@ import hashlib
 from numpy.core.numeric import indices
 from ..game.move import Move
 from ..junk import all_locations
+from ..utilities.loggers import log_timing_info
+from datetime import datetime
 
 C = 5
 
@@ -115,10 +117,14 @@ class MCTSNode(object):
         return len(self._children) == 0
 
     def select_next_node(self, tau):
+        start_time = datetime.now()
         #return max(self._children, key=lambda x: x._ucb())
         # print([x._uci(tau) for x in self._children])
         # print(max(self._children, key=lambda x: x._uci(tau)).get_action().get_location())
-        return max(self._children, key=lambda x: x._uci(tau))
+        best_node = max(self._children, key=lambda x: x._uci(tau))
+        end_time = datetime.now()
+        log_timing_info(f"select_next_node time: {end_time-start_time}")
+        return best_node
 
     def backprop_value(self, v):
         self._value += v
@@ -137,8 +143,8 @@ class MCTSNode(object):
         return softmax_probs
 
     def generate_all_valid_next_states(self, player, valid_next_actions, probs, tree):
+        start_time = datetime.now()
         softmax_probs = self._cheaty_thing(valid_next_actions, probs)
-        #print(softmax_probs)
         for action, prob in zip(valid_next_actions, softmax_probs):
             game_copy = deepcopy(self._game)
             move = Move(player, action)
@@ -152,6 +158,8 @@ class MCTSNode(object):
             self._children.append(child_node)
             self._child_probs.append(prob)
             tree.add_node_to_tree(child_node)
+        end_time = datetime.now()
+        log_timing_info(f"generate_all_valid_next_states time: {end_time-start_time}")
 
     def is_game_done(self):
         return self._game.is_done()
@@ -251,6 +259,7 @@ class MCTS(object):
             print(f"{i}: {[gchild.get_visits() for gchild in child.get_children()]}")
 
     def step(self, start_node, our_player, tau):
+        start_time_step = datetime.now()
         node = start_node
         while not node.is_leaf():
             node = node.select_next_node(tau)
@@ -273,10 +282,14 @@ class MCTS(object):
             if node.get_num_children() == 0:
                 node.expand(self)
 
+        start_time_backprop = datetime.now()
         while node is not None:
             node.increment_visits()
             v = node.backprop_value(v)
             node = node.get_parent()
+        end_time_backprop = datetime.now()
+        log_timing_info(f"backprop time: {end_time_backprop-start_time_backprop}")
+        log_timing_info(f"step time: {end_time_backprop-start_time_step}")
 
     def reverse_build_tree(self, node):
         """
