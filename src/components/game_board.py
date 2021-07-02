@@ -57,7 +57,7 @@ class GameBoard(object):
         return all_structures
 
     def get_all_player_structures(self, player):
-        return self._get_all_faction_structures(self, player.get_faction())
+        return self._get_all_faction_structures(player.get_faction())
 
     def get_terrain(self, location_code):
         row_val, col_val = self._get_location_row_col(location_code)
@@ -131,7 +131,7 @@ class GameBoard(object):
     def _get_only_faction_struct_type(self, faction, struct_type):
         faction_struct_type_only_locations = []
         for row in self._structures:
-            faction_struct_only_row = [1 if struct.get_faction == faction and struct.get_type == struct_type else 0 for struct in row]
+            faction_struct_only_row = [1 if struct.get_faction() == faction and struct.get_type() == struct_type else 0 for struct in row]
             faction_struct_type_only_locations.append(faction_struct_only_row)
         return faction_struct_type_only_locations
 
@@ -148,7 +148,6 @@ class GameBoard(object):
             else:
                 terrain_only_map = self._get_only_terrain(terrain)
                 extended_map = self._extend_terrain_map(terrain_only_map)
-                print(len(extended_map[0]))
                 tensor_terrain_map = self._convert_map_to_tensor(extended_map, axis=0)
                 terrain_maps.append(tensor_terrain_map)
         return tf.stack(terrain_maps, axis=0)
@@ -173,15 +172,14 @@ class GameBoard(object):
         #print(self._generate_terrain_board_state())
         terrain_tensors = self._generate_terrain_board_state()
         structure_tensors = self._generate_structures_board_state()
+        flat_tensor = tf.reshape(structure_tensors, [-1])
         total_game_board_tensor = tf.concat([terrain_tensors, structure_tensors], axis=0)
-        print(total_game_board_tensor.shape)
         return tf.reshape(total_game_board_tensor, (1, 78, 9, 25))
 
     def get_board_state_str(self):
         board_state = self.generate_board_state()
         flat_tensor = tf.reshape(board_state, [-1])
         bs_str = tf.strings.as_string(flat_tensor).numpy().tolist()
-        print([i for i in range(len(bs_str)) if bs_str[i] == b'1'])
         return b','.join(bs_str)
 
 
