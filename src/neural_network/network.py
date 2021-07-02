@@ -64,7 +64,7 @@ class TerraMysticaAINetwork():
         y = Dense(128)(game_board_cnn.output)
         y = Dense(64)(y)
         y = Dense(32)(y)
-        y = Dense(1, activation='tanh', name='value_output')(y)
+        y = Dense(1, activation='linear', name='value_output')(y)
 
         self._model = Model(inputs=game_board_cnn.input, outputs=[x, y], name="tm_nn")
 
