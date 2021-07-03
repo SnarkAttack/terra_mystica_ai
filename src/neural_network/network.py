@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Input, ReLU, BatchNormalization, Conv2D, Add
 from tensorflow.keras import metrics, Model
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.python.keras.metrics import MeanSquaredError
-from ..junk import all_locations
+from ..utilities.locations import all_locations
 
 def relu_bn(inputs):
     relu = ReLU()(inputs)
@@ -39,6 +39,8 @@ def game_board_net(height, width, depth):
 
     outputs = Flatten()(x)
 
+    # this output is ~2^17 (actually 179712, or 2^17.45)
+
     model = Model(inputs, outputs)
 
     return model
@@ -56,14 +58,14 @@ class TerraMysticaAINetwork():
 
         game_board_cnn = game_board_net(height, width, depth)
 
-        x = Dense(128)(game_board_cnn.output)
-        x = Dense(64)(x)
-        x = Dense(32)(x)
-        x = Dense(113, activation='softmax', name='action_output')(x)
+        x = Dense(16384)(game_board_cnn.output)
+        x = Dense(8192)(x)
+        x = Dense(4096)(x)
+        x = Dense(len(all_locations), activation='softmax', name='action_output')(x)
 
-        y = Dense(128)(game_board_cnn.output)
-        y = Dense(64)(y)
-        y = Dense(32)(y)
+        y = Dense(16384)(game_board_cnn.output)
+        y = Dense(8192)(y)
+        y = Dense(4096)(y)
         y = Dense(1, activation='linear', name='value_output')(y)
 
         self._model = Model(inputs=game_board_cnn.input, outputs=[x, y], name="tm_nn")

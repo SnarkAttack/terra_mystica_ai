@@ -1,11 +1,12 @@
 from src.components.game_board import OriginalGameBoard
 from src.game.game import TerraMysticaGame
 from src.game.player import Player
-from src.mappings import BoardType, Factions
+from src.utilities.mappings import BoardType, Factions
 from src.neural_network.network import TerraMysticaAINetwork
 from src.neural_network.mcts import id_hash
 from src.neural_network.agent import Agent
 import tensorflow as tf
+from src.game.action import all_actions, PlaceDwellingAction
 
 agent1 = Agent()
 agent2 = Agent()

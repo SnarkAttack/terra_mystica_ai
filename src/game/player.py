@@ -1,7 +1,7 @@
 from .action import PlaceDwellingAction
 from .move import Move
 from .resources import ResourceRequirements, ResourceGroup
-from ..mappings import Factions, MoveType, Structures
+from ..utilities.mappings import Factions, MoveType, Structures
 from ..components.faction_board import FactionBoard, WitchesFactionBoard, NomadsFactionBoard, FactionBoard
 from ..utilities import MAX_TRADING_POSTS, MAX_TEMPLES, MAX_STRONGHOLDS, MAX_SANCTUARIES, MAX_DWELLINGS
 import copy
@@ -22,6 +22,7 @@ class Player(object):
         self._game = game
 
         self._faction = faction
+        self._terrain = self._player_board.get_home_terrain()
         self._agent = agent
 
         self._coins = self._player_board.get_starting_coins()
@@ -145,8 +146,7 @@ class Player(object):
 
     def determine_valid_next_actions(self, move_type):
         if move_type == MoveType.PLACE_DWELLING:
-            terrain_codes = self.get_home_terrain_tile_codes()
-            valid_building_locations = [location_code for location_code in terrain_codes if self._game.get_game_board().get_structure(location_code).get_type() == Structures.NONE]
+            valid_building_locations = self._game.get_game_board().get_valid_building_locations(self._terrain, Structures.DWELLING)
             return [PlaceDwellingAction(location_code) for location_code in valid_building_locations]
 
     def generate_player_state(self):

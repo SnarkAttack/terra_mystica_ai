@@ -1,6 +1,6 @@
 from src.game.player import Player
 from src.game.game import TerraMysticaGame
-from src.mappings import Factions, BoardType
+from src.utilities.mappings import Factions, BoardType
 
 def test_power():
     player = Player(None, Factions.WITCHES)

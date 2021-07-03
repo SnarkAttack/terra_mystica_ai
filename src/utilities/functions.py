@@ -1,4 +1,4 @@
-from ..mappings import Terrain
+from ..utilities.mappings import Terrains
 
 def get_shovel_cost(terrain_from, terrain_to):
     terrain_diff = abs(int(terrain_from)-int(terrain_to))

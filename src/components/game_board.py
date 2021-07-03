@@ -1,8 +1,10 @@
 import tensorflow as tf
 
 from ..game.exceptions import InvalidActionException
-from ..mappings import Factions, Terrain, Structures
+from ..utilities.mappings import Factions, Terrains, Structures
 from ..components.structures import Structure, Dwelling, TradingPost, Stronghold, Temple, Sanctuary
+
+from ..utilities.loggers import game_logger
 
 class GameBoard(object):
 
@@ -39,13 +41,24 @@ class GameBoard(object):
             return None
         row[col_val] = Dwelling(location_code, faction)
 
+    def get_valid_building_locations(self, terrain, structure_type):
+        terrain_codes = self.get_valid_location_codes_terrain_type(terrain)
+        if structure_type == Structures.DWELLING:
+            struct_needed = Structures.NONE
+        else:
+            game_logger.error(f"Structure type {structure_type} has no defined structure requirements")
+        valid_building_locations = [location_code for location_code in terrain_codes if self.get_structure(location_code).get_type() == struct_needed]
+        return valid_building_locations
+
     def get_structure(self, location_code):
         row_val, col_val = self._get_location_row_col(location_code)
         if row_val >= len(self._structures):
-            return Terrain.NONE
+            game_logger.error(f"Location {location_code} is not a valid code; row value too large")
+            return Terrains.NONE
         row = self._structures[row_val]
         if col_val >= len(row):
-            return Terrain.NONE
+            game_logger.error(f"Location {location_code} is not a valid code; column value too large")
+            return Terrains.NONE
         return row[col_val]
 
     def _get_all_faction_structures(self, faction):
@@ -62,10 +75,10 @@ class GameBoard(object):
     def get_terrain(self, location_code):
         row_val, col_val = self._get_location_row_col(location_code)
         if row_val >= len(self._locations):
-            return Terrain.NONE
+            return Terrains.NONE
         row = self._locations[row_val]
         if col_val >= len(row):
-            return Terrain.NONE
+            return Terrains.NONE
         return row[col_val]
 
     def terraform_location(self, location_code, terraform_to):
@@ -73,7 +86,7 @@ class GameBoard(object):
         if row_val >= len(self._locations):
             raise InvalidActionException
         row = self._locations[row_val]
-        cols = [terrain for terrain in row if terrain != Terrain.RIVER]
+        cols = [terrain for terrain in row if terrain != Terrains.RIVER]
         if col_val >= len(cols):
             raise InvalidActionException
         row[col_val] = terraform_to
@@ -109,8 +122,8 @@ class GameBoard(object):
         return extended_map
 
     def _extend_terrain_map(self, map):
-        return self._extend_map(map, int(Terrain.NONE))
-    
+        return self._extend_map(map, int(Terrains.NONE))
+
     def _extend_structure_map(self, map):
         return self._extend_map(map, int(Structures.NONE))
 
@@ -142,8 +155,8 @@ class GameBoard(object):
 
     def _generate_terrain_board_state(self):
         terrain_maps = []
-        for terrain in Terrain:
-            if terrain == Terrain.NONE:
+        for terrain in Terrains:
+            if terrain == Terrains.NONE:
                 continue
             else:
                 terrain_only_map = self._get_only_terrain(terrain)
@@ -169,7 +182,6 @@ class GameBoard(object):
         return tf.stack(structure_map_layers, axis=0)
 
     def generate_board_state(self):
-        #print(self._generate_terrain_board_state())
         terrain_tensors = self._generate_terrain_board_state()
         structure_tensors = self._generate_structures_board_state()
         flat_tensor = tf.reshape(structure_tensors, [-1])
@@ -182,21 +194,18 @@ class GameBoard(object):
         bs_str = tf.strings.as_string(flat_tensor).numpy().tolist()
         return b','.join(bs_str)
 
-
-
-
 class OriginalGameBoard(GameBoard):
     def __init__(self):
         self._locations = [
-            [Terrain.PLAINS, Terrain.MOUNTAINS, Terrain.FOREST, Terrain.LAKES, Terrain.DESERT, Terrain.WASTELAND, Terrain.PLAINS, Terrain.SWAMP, Terrain.WASTELAND, Terrain.FOREST, Terrain.LAKES, Terrain.WASTELAND, Terrain.SWAMP],
-            [Terrain.DESERT, Terrain.RIVER, Terrain.RIVER, Terrain.PLAINS, Terrain.SWAMP, Terrain.RIVER, Terrain.RIVER, Terrain.DESERT, Terrain.SWAMP, Terrain.RIVER, Terrain.RIVER, Terrain.DESERT],
-            [Terrain.RIVER, Terrain.RIVER, Terrain.SWAMP, Terrain.RIVER, Terrain.MOUNTAINS, Terrain.RIVER, Terrain.FOREST, Terrain.RIVER, Terrain.FOREST, Terrain.RIVER, Terrain.MOUNTAINS, Terrain.RIVER, Terrain.RIVER],
-            [Terrain.FOREST, Terrain.LAKES, Terrain.DESERT, Terrain.RIVER, Terrain.RIVER, Terrain.WASTELAND, Terrain.LAKES, Terrain.RIVER, Terrain.WASTELAND, Terrain.RIVER, Terrain.WASTELAND, Terrain.PLAINS],
-            [Terrain.SWAMP, Terrain.PLAINS, Terrain.WASTELAND, Terrain.LAKES, Terrain.SWAMP, Terrain.PLAINS, Terrain.MOUNTAINS, Terrain.DESERT, Terrain.RIVER, Terrain.RIVER, Terrain.FOREST, Terrain.SWAMP, Terrain.LAKES],
-            [Terrain.MOUNTAINS, Terrain.FOREST, Terrain.RIVER, Terrain.RIVER, Terrain.DESERT, Terrain.FOREST, Terrain.RIVER, Terrain.RIVER, Terrain.RIVER, Terrain.PLAINS, Terrain.MOUNTAINS, Terrain.PLAINS],
-            [Terrain.RIVER, Terrain.RIVER, Terrain.RIVER, Terrain.MOUNTAINS, Terrain.RIVER, Terrain.WASTELAND, Terrain.RIVER, Terrain.FOREST, Terrain.RIVER, Terrain.DESERT, Terrain.SWAMP, Terrain.LAKES, Terrain.DESERT],
-            [Terrain.DESERT, Terrain.LAKES, Terrain.PLAINS, Terrain.RIVER, Terrain.RIVER, Terrain.RIVER, Terrain.LAKES, Terrain.SWAMP, Terrain.RIVER, Terrain.MOUNTAINS, Terrain.PLAINS, Terrain.MOUNTAINS],
-            [Terrain.WASTELAND, Terrain.SWAMP, Terrain.MOUNTAINS, Terrain.LAKES, Terrain.WASTELAND, Terrain.FOREST, Terrain.DESERT, Terrain.PLAINS, Terrain.MOUNTAINS, Terrain.RIVER, Terrain.LAKES, Terrain.FOREST, Terrain.WASTELAND]
+            [Terrains.PLAINS, Terrains.MOUNTAINS, Terrains.FOREST, Terrains.LAKES, Terrains.DESERT, Terrains.WASTELAND, Terrains.PLAINS, Terrains.SWAMP, Terrains.WASTELAND, Terrains.FOREST, Terrains.LAKES, Terrains.WASTELAND, Terrains.SWAMP],
+            [Terrains.DESERT, Terrains.RIVER, Terrains.RIVER, Terrains.PLAINS, Terrains.SWAMP, Terrains.RIVER, Terrains.RIVER, Terrains.DESERT, Terrains.SWAMP, Terrains.RIVER, Terrains.RIVER, Terrains.DESERT],
+            [Terrains.RIVER, Terrains.RIVER, Terrains.SWAMP, Terrains.RIVER, Terrains.MOUNTAINS, Terrains.RIVER, Terrains.FOREST, Terrains.RIVER, Terrains.FOREST, Terrains.RIVER, Terrains.MOUNTAINS, Terrains.RIVER, Terrains.RIVER],
+            [Terrains.FOREST, Terrains.LAKES, Terrains.DESERT, Terrains.RIVER, Terrains.RIVER, Terrains.WASTELAND, Terrains.LAKES, Terrains.RIVER, Terrains.WASTELAND, Terrains.RIVER, Terrains.WASTELAND, Terrains.PLAINS],
+            [Terrains.SWAMP, Terrains.PLAINS, Terrains.WASTELAND, Terrains.LAKES, Terrains.SWAMP, Terrains.PLAINS, Terrains.MOUNTAINS, Terrains.DESERT, Terrains.RIVER, Terrains.RIVER, Terrains.FOREST, Terrains.SWAMP, Terrains.LAKES],
+            [Terrains.MOUNTAINS, Terrains.FOREST, Terrains.RIVER, Terrains.RIVER, Terrains.DESERT, Terrains.FOREST, Terrains.RIVER, Terrains.RIVER, Terrains.RIVER, Terrains.PLAINS, Terrains.MOUNTAINS, Terrains.PLAINS],
+            [Terrains.RIVER, Terrains.RIVER, Terrains.RIVER, Terrains.MOUNTAINS, Terrains.RIVER, Terrains.WASTELAND, Terrains.RIVER, Terrains.FOREST, Terrains.RIVER, Terrains.DESERT, Terrains.SWAMP, Terrains.LAKES, Terrains.DESERT],
+            [Terrains.DESERT, Terrains.LAKES, Terrains.PLAINS, Terrains.RIVER, Terrains.RIVER, Terrains.RIVER, Terrains.LAKES, Terrains.SWAMP, Terrains.RIVER, Terrains.MOUNTAINS, Terrains.PLAINS, Terrains.MOUNTAINS],
+            [Terrains.WASTELAND, Terrains.SWAMP, Terrains.MOUNTAINS, Terrains.LAKES, Terrains.WASTELAND, Terrains.FOREST, Terrains.DESERT, Terrains.PLAINS, Terrains.MOUNTAINS, Terrains.RIVER, Terrains.LAKES, Terrains.FOREST, Terrains.WASTELAND]
         ]
 
         self._structures = [

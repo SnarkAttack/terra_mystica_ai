@@ -1,4 +1,4 @@
-from ..mappings import Terrain, Cults
+from ..utilities.mappings import Terrains, Cults
 
 class CultTrack(object):
 
@@ -7,7 +7,7 @@ class CultTrack(object):
             [], [], [], [], [], [], [], [], [], []
         ]
         self._order_sites_usage = [
-            Terrain.None, Terrain.None, Terrain.None, Terrain.None
+            Terrains.None, Terrains.None, Terrains.None, Terrains.None
         ]
         self._order_sites_value = [
             3, 2, 2, 2

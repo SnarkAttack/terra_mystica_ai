@@ -1,6 +1,6 @@
 from enum import Enum, IntEnum
 
-class Terrain(IntEnum):
+class Terrains(IntEnum):
     NONE = 0
     PLAINS = 1
     SWAMP = 2

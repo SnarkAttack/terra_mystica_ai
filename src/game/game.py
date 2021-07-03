@@ -1,4 +1,4 @@
-from ..mappings import BoardType, GamePhase, MoveType
+from ..utilities.mappings import BoardType, GamePhase, MoveType
 from ..components.game_board import OriginalGameBoard
 from ..utilities.loggers import game_logger
 
@@ -69,16 +69,14 @@ class TerraMysticaGame(object):
 
         players_by_score = sorted(self._players, key=lambda x: x._vps, reverse=True)
 
-        game_logger.info(f"Final scores:\n")
+        game_logger.info(f"Final scores:")
         for player in players_by_score:
             game_logger.info(f"\t{str(int(player.get_faction()))}: {player.get_vps()}")
-        game_logger.info(f"{str(int(players_by_score[0].get_faction()))} wins")
+        game_logger.info(f"{str(int(players_by_score[0].get_faction()))} wins\n")
 
     def perform_next_move(self):
         self._current_move = self._pending_moves.pop(0)
         # Set conditional flags signalling change to next game stage, etc:
-        if len(self._pending_moves) == 0:
-            self._is_done = True
         selected_move = self._current_move.get_player().select_move()
         game_logger.info(f"Faction {selected_move.get_player().get_faction()} "
             f"selects action {selected_move.get_action().get_text_str()}")
@@ -88,6 +86,8 @@ class TerraMysticaGame(object):
     def perform_move(self, move):
         action = move.get_action()
         action.take_action(self, move.get_player())
+        if len(self._pending_moves) == 0 and self._round == 0:
+            self._is_done = True
 
     def get_all_valid_next_actions(self):
         current_move = self._current_move

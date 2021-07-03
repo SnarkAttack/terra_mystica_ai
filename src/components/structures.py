@@ -1,4 +1,4 @@
-from ..mappings import Structures, Factions
+from ..utilities.mappings import Structures, Factions
 
 
 class Structure(object):

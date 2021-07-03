@@ -1,6 +1,7 @@
 from ..utilities.functions import get_shovel_cost
+from ..utilities.locations import all_locations
 from .exceptions import InvalidActionException
-from ..mappings import Structures
+from ..utilities.mappings import Structures, Terrains
 
 class Action(object):
 
@@ -26,6 +27,9 @@ class TerraformNoBuildAction(Action):
     def __init__(self, location, terraform_to):
         self._location = location
         self._terraform_to = terraform_to
+
+    def __eq__(self, other):
+        return self._location == other._location and self._terraform_to == other._terraform_to
 
     def _raw_take_action(self, game, player):
 
@@ -53,6 +57,9 @@ class TerraformBuildAction(Action):
         self._location = location
         self._terraform_to = terraform_to
 
+    def __eq__(self, other):
+        return self._location == other._location and self._terraform_to == other._terraform_to
+
     def _raw_take_action(self, game, player):
 
         game_board = game.get_game_board()
@@ -79,6 +86,9 @@ class PlaceDwellingAction(Action):
         super().__init__()
         self._location = location
 
+    def __eq__(self, other):
+        return self._location == other._location
+
     def get_location(self):
         return self._location
 
@@ -90,10 +100,33 @@ class PlaceDwellingAction(Action):
             raise InvalidActionException("Building already located in this place")
 
         if game_board.get_terrain(self._location) != player.get_home_terrain():
-            raise InvalidActionException("Terrain location does not match faction")
+            raise InvalidActionException("Terrains location does not match faction")
 
         game_board.place_dwelling(self._location, player.get_faction())
         player._available_dwellings -= 1
 
     def get_text_str(self):
         return f"PlaceDwelling at location {self._location}"
+
+
+# Will be final list of all available actions
+all_actions = []
+
+
+no_build_actions = []
+build_actions = []
+place_dwelling_actions = []
+
+for location in all_locations:
+    for terrain in Terrains:
+        no_build_actions.append(TerraformNoBuildAction(location, terrain))
+        build_actions.append(TerraformBuildAction(location, terrain))
+    place_dwelling_actions.append(PlaceDwellingAction(location))
+
+all_actions += no_build_actions
+all_actions += build_actions
+
+print(len(all_actions))
+
+def get_actions_mask(valid_actions):
+    return [1 if action in all_actions else 0 for action in valid_actions]

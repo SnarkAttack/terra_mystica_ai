@@ -4,9 +4,10 @@ import hashlib
 
 from numpy.core.numeric import indices
 from ..game.move import Move
-from ..junk import all_locations
+from ..utilities.locations import all_locations
 from ..utilities.loggers import log_timing_info
 from datetime import datetime
+from ..game.action import get_actions_mask
 
 C = 5
 
@@ -169,7 +170,8 @@ class MCTSNode(object):
 
     def expand(self, tree):
         player, valid_next_actions = self.get_game().get_all_valid_next_actions()
-        probs = tree._network.predict_actions(self.get_game_state())
+        probs = tree._network.predict_actions(self.get_game_state(), get_actions_mask(valid_next_actions))
+        print(get_actions_mask)
         self.generate_all_valid_next_states(player, valid_next_actions, probs, tree)
 
     def get_child_node_prob(self, child_node):
