@@ -46,6 +46,7 @@ class Factions(IntEnum):
 class BoardType(Enum):
     NONE = 0
     ORIGINAL = 1
+    TINY = 2
 
 class GamePhase(Enum):
     UNKNOWN = 0
@@ -55,8 +56,15 @@ class GamePhase(Enum):
     CULT_BONUSES = 4
     CLEANUP = 5
 
-class MoveType(Enum):
+class Actions(Enum):
     NONE = 0
-    ACTION = 1
-    SIPHON_POWER = 2
-    PLACE_DWELLING = 3
+    STANDARD_ACTION = 1
+    TERRAFORM_NO_BUILD = 2
+    TERRAFORM_BUILD = 3
+    SIPHON_POWER = 4
+    PLACE_DWELLING = 5
+    PLAY_PRIEST_TO_CULT_TRACK = 6
+    PASS = 7
+    INCREASE_EXCHANGE_TRACK = 8
+    INCREASE_SHIPPING_TRACK = 9
+    UPGRADE_BUILDING_TRACK = 10

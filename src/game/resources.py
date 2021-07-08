@@ -1,12 +1,12 @@
 
 class ResourceGroup(object):
 
-    def __init__(self, coins=0, workers=0, priests=0, power=0, vp=0):
+    def __init__(self, coins=0, workers=0, priests=0, power=0, vps=0):
         self._coins = coins
         self._workers = workers
         self._priests = priests
         self._power = power
-        self._vp = vp
+        self._vps = vps
 
     def get_coins(self):
         return self._coins
@@ -20,8 +20,8 @@ class ResourceGroup(object):
     def get_power(self):
         return self._power
 
-    def get_vp(self):
-        return self._vp
+    def get_vps(self):
+        return self._vps
 
     def __add__(self, o):
         return ResourceGroup(
@@ -40,9 +40,6 @@ class ResourceGroup(object):
             power=self._power - o.get_power(),
             vp=self._vp - o.get_vp()
         )
-
-    def __repr__(self):
-        return f"{self._coins}, {self._workers}, {self._priests}, {self._power}, {self._vp}"
 
 class ResourceRequirements(ResourceGroup):
 

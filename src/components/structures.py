@@ -21,6 +21,21 @@ class Structure(object):
     def get_value(self):
         return self._value
 
+    @classmethod
+    def create_structure(cls, struct_type, location_code, faction):
+        if struct_type == Structures.DWELLING:
+            return Dwelling(location_code, faction)
+        elif struct_type == Structures.TRADING_POST:
+            return TradingPost(location_code, faction)
+        elif struct_type == Structures.STRONGHOLD:
+            return Stronghold(location_code, faction)
+        elif struct_type == Structures.TEMPLE:
+            return Temple(location_code, faction)
+        elif struct_type == Structures.SANCTUARY:
+            return Sanctuary(location_code, faction)
+        else:
+            raise ValueError("Trying to create unknown structure type")
+
 
 class Dwelling(Structure):
 

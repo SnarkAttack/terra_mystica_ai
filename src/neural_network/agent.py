@@ -3,14 +3,17 @@ from .network import TerraMysticaAINetwork
 
 class Agent(object):
 
-    def __init__(self):
+    def __init__(self, memory):
         self._network = TerraMysticaAINetwork()
-        self._mcts = MCTS(self._network)
+        self._memory = memory
 
     def determine_next_action(self, game, player):
-        if self._mcts is None:
-            self._mcts = MCTS(self._network, game)
-        best_move = self._mcts.determine_next_action(game, player)
+        mcts = MCTS(self._network)
+        root, best_move = mcts.determine_next_action(game, player)
+        self._memory.add_to_st_memory(root.get_game_state())
+        if self._memory.check_st_memory_stored():
+            print("Adding to long term memory")
+            self._memory.add_to_lt_memory()
         return best_move
 
     def get_state_tree(self, game):
