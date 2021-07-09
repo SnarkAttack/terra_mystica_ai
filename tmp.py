@@ -8,7 +8,7 @@ from src.neural_network.memory import Memory
 import tensorflow as tf
 from src.game.action import all_actions, PlaceDwellingAction
 
-memory = Memory('memory', max_moves=20)
+memory = Memory('memory', max_moves=1000)
 
 agent1 = Agent(memory=memory)
 agent2 = Agent(memory=memory)

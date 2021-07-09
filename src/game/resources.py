@@ -29,7 +29,7 @@ class ResourceGroup(object):
             workers=self._workers + o.get_workers(),
             priests=self._priests + o.get_priests(),
             power=self._power + o.get_power(),
-            vp=self._vp + o.get_vp()
+            vps=self._vps + o.get_vps()
         )
 
     def __sub__(self, o):
@@ -38,8 +38,11 @@ class ResourceGroup(object):
             workers=self._workers - o.get_workers(),
             priests=self._priests - o.get_priests(),
             power=self._power - o.get_power(),
-            vp=self._vp - o.get_vp()
+            vps=self._vp - o.get_vp()
         )
+
+    def get_str(self):
+        return f"{self._coins},{self._workers},{self._priests},{self._power},{self._vps}"
 
 class ResourceRequirements(ResourceGroup):
 

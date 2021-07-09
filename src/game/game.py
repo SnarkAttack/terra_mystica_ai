@@ -3,8 +3,11 @@ from ..components.game_board import OriginalGameBoard, TinyGameBoard
 from ..components.cult_board import CultBoard
 from ..utilities.loggers import game_logger
 from ..utilities.functions import convert_location_code_to_row_col
+from .player import Player
+from copy import deepcopy
+from .action import PendingMove
 
-MAX_ROUNDS = 1
+MAX_ROUNDS = 6
 
 class GameState(object):
 
@@ -16,26 +19,6 @@ class GameState(object):
 
     def get_game_board_state(self):
         return self._game_board_state
-
-class PendingMove(object):
-
-    def __init__(self, player, move_type, power_val=0):
-        self._player = player
-        self._move_type = move_type
-        # Only used when move_type is SIPHON_POWER
-        self._power_val = power_val
-
-    def get_player(self):
-        return self._player
-
-    def get_move_type(self):
-        return self._move_type
-
-    def get_power_val(self):
-        return self._power_val
-
-    def __str__(self):
-        return f"{self._player.get_faction()}: {self._move_type}"
 
 def get_default_game(board_type):
     return TerraMysticaGame(board_type)
@@ -65,7 +48,7 @@ class TerraMysticaGame(object):
 
         self._current_move = None
 
-        self._log = False
+        self._log = True
 
     def add_player(self, player):
         if player not in self._players:
@@ -78,13 +61,16 @@ class TerraMysticaGame(object):
         return self._game_board
 
     def get_cult_board(self):
-        pass
+        return self._cult_board
 
     def get_players(self):
         return self._players
 
     def get_next_player(self):
         return self._pending_moves[0].get_player()
+
+    def get_player_of_faction(self, faction):
+        return [player for player in self._players if player._faction == faction][0]
 
     def play_game(self):
 
@@ -120,6 +106,8 @@ class TerraMysticaGame(object):
         game_logger.debug([str(a) for a in self._pending_moves])
         if round_change:
             game_logger.info(f"***** Round {self._round} *****")
+            for player in self._players:
+                game_logger.info(player.get_player_resource_str())
         self._log = False
 
     def perform_move(self, move):
@@ -145,7 +133,7 @@ class TerraMysticaGame(object):
 
     def get_all_valid_next_actions(self):
         current_move = self._pending_moves[0]
-        actions = current_move.get_player().determine_valid_next_actions(current_move.get_move_type())
+        actions = current_move.get_player().determine_valid_next_actions(current_move)
         return current_move.get_player(), actions
 
     def get_high_score(self):
@@ -167,6 +155,15 @@ class TerraMysticaGame(object):
     def get_player_by_faction(self, faction):
         return [player for player in self._players if player.get_faction() == faction][0]
 
+    def replace_player_by_faction(self, faction):
+        for i, player in enumerate(self._players):
+            if player.get_faction() == faction:
+                break
+        new_player = Player(game=self, other=player)
+        print(f"{player},{new_player}")
+        self._players[i] = new_player
+        return new_player
+
     # Made up scoring system where the score is base score of
     # 20 + sum of row/column for each placed dwelling. Just to check
     # if we learn things, would expect dwellings to end up in bottom right
@@ -185,6 +182,9 @@ class TerraMysticaGame(object):
 
     def add_pending_move_end(self, pending_move):
         self._pending_moves.append(pending_move)
+
+    def add_pending_move_start(self, pending_move):
+        self._pending_moves.insert(0, pending_move)
 
     def add_player_pass(self, player):
         self._passed_players.append(player)

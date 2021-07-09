@@ -11,7 +11,7 @@ class Terrains(IntEnum):
     DESERT = 7
     RIVER = 8
 
-class Cults(Enum):
+class Cults(IntEnum):
     NONE = 0
     FIRE = 1
     WATER = 2
@@ -35,7 +35,7 @@ class Factions(IntEnum):
     DARKLINGS = 5
     DWARVES = 6
     ENGINEERS = 7
-    FAKIR = 8
+    FAKIRS = 8
     GIANTS = 9
     HALFLINGS = 10
     MERMAIDS = 11
@@ -68,3 +68,4 @@ class Actions(Enum):
     INCREASE_EXCHANGE_TRACK = 8
     INCREASE_SHIPPING_TRACK = 9
     UPGRADE_BUILDING_TRACK = 10
+    USE_PRIEST_TO_INCREASE_CULT_TRACK = 11

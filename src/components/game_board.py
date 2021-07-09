@@ -5,7 +5,12 @@ from ..utilities.mappings import Factions, Terrains, Structures
 from ..components.structures import Structure, Dwelling, TradingPost, Stronghold, Temple, Sanctuary
 
 from ..utilities.loggers import game_logger
-from ..utilities.functions import convert_row_col_to_location_code, convert_location_code_to_row_col
+from ..utilities.functions import (
+    convert_row_col_to_location_code,
+    convert_location_code_to_row_col,
+    faction_to_terrain
+)
+
 
 class GameBoard(object):
 
@@ -81,7 +86,9 @@ class GameBoard(object):
 
     def get_adjacent_modifiable_locations(self, faction):
         adj_locs = self.get_adjacent_locations(faction)
-        adj_locs = [loc for loc in adj_locs if self.get_terrain(loc) != Terrains.RIVER and self.get_terrain(loc) != Terrains.NONE]
+        adj_locs = [loc for loc in adj_locs if self.get_terrain(loc) != Terrains.RIVER and \
+                    self.get_terrain(loc) != Terrains.NONE and \
+                    self.get_structure_at_location(loc).get_type() == Structures.NONE]
         return adj_locs
 
     # This calculating all possible locations based on directly and indirecly adjacent tiles
@@ -106,13 +113,26 @@ class GameBoard(object):
     def place_dwelling(self, location_code, faction):
         self.place_structure(Structures.DWELLING, location_code, faction)
 
-    def get_valid_building_locations(self, terrain, structure_type):
+    def get_valid_dwelling_placement_locations(self, faction, structure_type):
+        terrain = faction_to_terrain(faction)
         terrain_codes = self.get_valid_location_codes_terrain_type(terrain)
         if structure_type == Structures.DWELLING:
             struct_needed = Structures.NONE
         else:
             game_logger.error(f"Structure type {structure_type} has no defined structure requirements")
         valid_building_locations = [location_code for location_code in terrain_codes if self.get_structure_at_location(location_code).get_type() == struct_needed]
+        return valid_building_locations
+
+    def get_valid_building_locations(self, faction, structure_type):
+        terrain = faction_to_terrain(faction)
+        terrain_codes = self.get_valid_location_codes_terrain_type(terrain)
+        adjacent_locs = self.get_adjacent_modifiable_locations(faction)
+        location_codes = [a for a in terrain_codes if a in adjacent_locs]
+        if structure_type == Structures.DWELLING:
+            struct_needed = Structures.NONE
+        else:
+            game_logger.error(f"Structure type {structure_type} has no defined structure requirements")
+        valid_building_locations = [location_code for location_code in location_codes if self.get_structure_at_location(location_code).get_type() == struct_needed]
         return valid_building_locations
 
     def get_structure_at_location(self, location_code):
@@ -153,13 +173,14 @@ class GameBoard(object):
     def get_adjacent_opponents_power(self, location_code):
         opp_power_levels = {}
         orig_struct = self.get_structure_at_location(location_code)
-        adj_locs = self.get_directly_adjacent_locations()
+        adj_locs = self.get_directly_adjacent_locations(location_code)
         for loc in adj_locs:
             struct = self.get_structure_at_location(loc)
             opp_faction = struct.get_faction()
             if opp_faction != Factions.NONE and struct.get_faction() != orig_struct.get_faction():
                 prev_val = opp_power_levels.get(opp_faction, 0)
                 opp_power_levels[opp_faction] = prev_val + struct.get_value()
+        return opp_power_levels
 
     def get_terrain(self, location_code):
         row_val, col_val = convert_location_code_to_row_col(location_code)

@@ -1,9 +1,29 @@
-from .game import PendingMove
 from ..utilities.functions import get_shovel_cost
 from ..utilities.locations import all_locations
 from .exceptions import InvalidActionException
-from ..utilities.mappings import Structures, Terrains, Actions
+from ..utilities.mappings import Structures, Terrains, Actions, Cults
 from .resources import ResourceRequirements, ResourceGroup
+
+
+class PendingMove(object):
+
+    def __init__(self, player, move_type, power_val=0):
+        self._player = player
+        self._move_type = move_type
+        # Only used when move_type is SIPHON_POWER
+        self._power_val = power_val
+
+    def get_player(self):
+        return self._player
+
+    def get_move_type(self):
+        return self._move_type
+
+    def get_power_val(self):
+        return self._power_val
+
+    def __str__(self):
+        return f"{self._player.get_faction()}: {self._move_type}"
 
 class Action(object):
 
@@ -52,6 +72,9 @@ class TerraformBuildAction(Action):
         super().__init__(resource_cost)
         self._location = location
         self._terraform_to = terraform_to
+
+    def get_location(self):
+        return self._location
 
     def __eq__(self, other):
         if super().__eq__(other):
@@ -110,6 +133,9 @@ class IncreaseShippingTrackAction(Action):
 
         game.add_pending_move_end(PendingMove(player, Actions.STANDARD_ACTION))
 
+    def get_text_str(self):
+        return f"IncreaseShippingTrack"
+
 class IncreaseExchangeTrackAction(Action):
 
     def __init__(self, resource_cost=None):
@@ -124,6 +150,9 @@ class IncreaseExchangeTrackAction(Action):
         player.increase_exchange_track()
 
         game.add_pending_move_end(PendingMove(player, Actions.STANDARD_ACTION))
+
+    def get_text_str(self):
+        return f"IncreaseExchangeTrack"
 
 class UpgradeBuildingAction(Action):
 
@@ -160,13 +189,23 @@ class UpgradeBuildingAction(Action):
         player.spend_resources(self._resource_cost)
         player.upgrade_building(self._location_code, orig_struct_type, struct_to)
 
+        adj_opps = game_board.get_adjacent_opponents_power(self._location_code)
+
+        for player in game.get_players()[::-1]:
+            fact = player.get_faction()
+            if fact in adj_opps.keys():
+                game.add_pending_move_start(PendingMove(player, Actions.SIPHON_POWER, adj_opps[fact]))
+
         game.add_pending_move_end(PendingMove(player, Actions.STANDARD_ACTION))
+
+    def get_text_str(self):
+        return f"UpgradeBuilding at {self._location_code} ({self._upgrade_to_stronghold})"
 
 class SiphonPowerAction(Action):
 
-    def __init__(self, power_val, resource_cost=None):
+    def __init__(self, resource_cost=None):
         super().__init__(resource_cost)
-        self._power_val = power_val
+        self._power = resource_cost.get_power() if resource_cost is not None else 0
 
     def __eq__(self, other):
         return type(self) == type(other)
@@ -176,17 +215,22 @@ class SiphonPowerAction(Action):
         # Hacky, expecting the vps passed in to be negative
         player.gain_resources(self._resource_cost)
 
+    def get_text_str(self):
+        return f"SiphonPower for {self._power} power"
+
 class DeclineSiphonPowerAction(Action):
 
-    def __init__(self, power_val, resource_cost=None):
+    def __init__(self, resource_cost=None):
         super().__init__(resource_cost)
-        self._power_val = power_val
 
     def __eq__(self, other):
         return type(self) == type(other)
 
     def take_action(self, game, player):
         pass
+
+    def get_text_str(self):
+        return f"DeclineSiphonPower"
 
 class PlayPriestToCultTrackAction(Action):
 
@@ -217,6 +261,39 @@ class PlayPriestToCultTrackAction(Action):
 
         game.add_pending_move_end(PendingMove(player, Actions.STANDARD_ACTION))
 
+    def get_text_str(self):
+        return f"PlayPriesttoCultTrack on cult track {self._cult}"
+
+class UsePriestToIncreaseCultTrackAction(Action):
+
+    def __init__(self, cult, resource_cost=None):
+        super().__init__(resource_cost)
+        self._cult = cult
+
+    def __eq__(self, other):
+        if super().__eq__(other):
+            return self._cult == other._cult
+        return False
+
+    def get_cult(self):
+        return self.get_cult
+
+    def take_action(self, game, player):
+
+        cult_board = game.get_cult_board()
+        action_cost = ResourceRequirements(priests=1)
+
+        if player.get_priests() < action_cost.get_priests():
+            raise InvalidActionException("Not enough priests")
+
+        cult_board.increase_cult_track(self._cult, player.get_faction(), 1)
+        player.spend_resources(action_cost)
+
+        game.add_pending_move_end(PendingMove(player, Actions.STANDARD_ACTION))
+
+    def get_text_str(self):
+        return f"UsePriestToIncreaseCultTrack on cult track {self._cult}"
+
 class PassAction(Action):
 
     def __init__(self):
@@ -239,6 +316,8 @@ no_build_actions = []
 build_actions = []
 place_dwelling_actions = []
 upgrade_structure_actions = []
+play_priest_to_cult_track_actions = []
+use_priest_to_increase_cult_track = []
 
 for location in all_locations:
     for terrain in Terrains:
@@ -248,10 +327,17 @@ for location in all_locations:
     for val in [True, False]:
         upgrade_structure_actions.append(UpgradeBuildingAction(location, val))
 
+for cult in Cults:
+    play_priest_to_cult_track_actions.append(PlayPriestToCultTrackAction(cult))
+    use_priest_to_increase_cult_track.append(UsePriestToIncreaseCultTrackAction(cult))
+
+
 all_actions += no_build_actions
 all_actions += build_actions
 all_actions += place_dwelling_actions
 all_actions += upgrade_structure_actions
+all_actions += play_priest_to_cult_track_actions
+all_actions += use_priest_to_increase_cult_track
 all_actions.append(IncreaseShippingTrackAction())
 all_actions.append(IncreaseExchangeTrackAction())
 all_actions.append(SiphonPowerAction())

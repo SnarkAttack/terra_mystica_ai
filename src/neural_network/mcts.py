@@ -7,6 +7,7 @@ from ..utilities.locations import all_locations
 from ..utilities.loggers import log_timing_info
 from datetime import datetime
 from ..game.action import get_actions_mask, action_space, all_actions
+from .network import softmax
 
 C = 1
 
@@ -96,17 +97,19 @@ class MCTSNode(object):
     def get_game_state(self):
         return self._game.get_game_state()
 
-    def generate_all_valid_next_states(self, player, valid_next_actions, probs, add_noise=True):
+    def generate_all_valid_next_states(self, player, valid_next_actions, probs):
         start_time = datetime.now()
         valid_probs = [probs[i] for i in range(action_space) if all_actions[i] in valid_next_actions]
         for action, prob in zip(valid_next_actions, valid_probs):
             game_copy = deepcopy(self._game)
+            player_copy = game_copy.get_player_by_faction(player.get_faction())
+            # player_copy = game_copy.replace_player_by_faction(player.get_faction())
             game_copy._log = False
-            move = Move(player, action)
+            move = Move(player_copy, action)
             game_copy.perform_move(move)
             child_node = MCTSNode(
                 game=game_copy,
-                current_player=player,
+                current_player=player_copy,
                 parent=self,
                 probability=prob,
                 action=action
@@ -129,7 +132,9 @@ class MCTSNode(object):
         player, valid_next_actions = self.get_game().get_all_valid_next_actions()
         action_mask = get_actions_mask(valid_next_actions)
         probs = tree._network.predict_actions(self.get_game_state(), action_mask)
-        self.generate_all_valid_next_states(player, valid_next_actions, probs, tree.add_noise())
+        if tree._add_noise:
+            probs = tree.add_noise(probs)
+        self.generate_all_valid_next_states(player, valid_next_actions, probs)
 
     def determine_value(self, network):
         is_done = self.is_game_done()
@@ -181,7 +186,7 @@ class MCTS(object):
 
         for i in range(self._num_steps):
             tau = self._mid_tau_step(i)
-            self.step(curr_root, our_player, 0)
+            self.step(curr_root, our_player, tau)
 
         best_child = curr_root.get_highest_value_visited_child()
         best_action = best_child.get_action()
@@ -218,3 +223,10 @@ class MCTS(object):
         end_time_backprop = datetime.now()
         log_timing_info(f"backprop time: {end_time_backprop-start_time_backprop}")
         log_timing_info(f"step time: {end_time_backprop-start_time_step}")
+
+    def add_noise(self, probs):
+        prob_array = np.asarray(probs)
+        noise = np.random.normal(0, .02, prob_array.shape)
+        prob_array = prob_array + noise
+        prob_array = softmax(prob_array)
+        return prob_array.tolist()

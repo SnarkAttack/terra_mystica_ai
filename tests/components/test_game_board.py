@@ -26,16 +26,15 @@ def test_board_location():
 
 def test_valid_dwelling_placements():
     board = OriginalGameBoard()
-    terrain = Terrains.WASTELAND
     faction = Factions.GIANTS
 
-    valid_building_locations = board.get_valid_building_locations(terrain, Structures.DWELLING)
+    valid_building_locations = board.get_valid_dwelling_placement_locations(faction, Structures.DWELLING)
     assert valid_building_locations == ['A6', 'A9', 'A12', 'D6', 'D9', 'D11', 'E3', 'G6', 'I1', 'I5', 'I13']
 
     board.place_dwelling('A9', faction)
     board.place_dwelling('I5', faction)
 
-    updated_valid_building_locations = board.get_valid_building_locations(terrain, Structures.DWELLING)
+    updated_valid_building_locations = board.get_valid_dwelling_placement_locations(faction, Structures.DWELLING)
     assert updated_valid_building_locations == ['A6', 'A12', 'D6', 'D9', 'D11', 'E3', 'G6', 'I1', 'I13']
 
 def test_direct_adjacency():

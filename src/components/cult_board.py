@@ -28,13 +28,21 @@ class CultTrack(object):
         self._progress_track[0].append(faction)
 
     def add_priest_to_track(self, faction):
-        first_unused = 0
+        first_unused = -1
         for i, faction_space in enumerate(self._order_sites_usage):
             if faction_space == Factions.NONE:
                 first_unused = i
                 break
         self._order_sites_usage[first_unused] = faction
         return self._order_sites_value[first_unused]
+
+    def find_first_unused_priest_space(self):
+        first_unused = -1
+        for i, faction_space in enumerate(self._order_sites_usage):
+            if faction_space == Factions.NONE:
+                first_unused = i
+                break
+        return first_unused
 
 
 class CultBoard(object):
@@ -63,5 +71,12 @@ class CultBoard(object):
     def get_faction_location_on_cult_track(self, cult, faction):
         track = self._tracks[cult]
         return track.get_faction_location(faction)
+
+    def find_cult_track_first_unused_priest_space(self, cult):
+        track = self._tracks[cult]
+        first_unused = track.find_first_unused_priest_space()
+        return first_unused
+
+
 
 
